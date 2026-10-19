@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#fffbED">
-  <meta name="description" content="Vela Laboratories: an engineering record of a deterministic Rust spot-exchange research system, its measured performance, architecture, and limits.">
+  <meta name="description" content="Vela Laboratories: an engineering record of a Rust spot-exchange research system, its architecture, historical benchmarks, and trust boundaries.">
   <link rel="canonical" href="https://velalaboratories.com/">
   <meta property="og:url" content="https://velalaboratories.com/">
   <meta property="og:title" content="Vela Laboratories · Exchange research">
-  <meta property="og:description" content="A technical record of Vela's matching engine, architecture, benchmarks, and trust boundaries.">
+  <meta property="og:description" content="A technical record of Vela's matching engine, historical benchmarks, architecture, and limits.">
   <meta property="og:type" content="website">
   <title>Vela Laboratories · Exchange research</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -16,103 +16,166 @@
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
-  <div class="topbar"><a href="#top" aria-label="Vela Laboratories home">Vela Laboratories</a><span>Research archive</span></div>
+  <header class="site-header">
+    <a class="site-name" href="#top">Vela Laboratories</a>
+    <nav aria-label="Primary navigation">
+      <a href="#overview">Overview</a>
+      <a href="#benchmarks">Benchmarks</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#limits">Limits</a>
+    </nav>
+  </header>
+
   <main id="main">
-    <header id="top" class="hero">
+    <section class="hero" id="top" aria-labelledby="page-title">
       <div class="mark"><img src="/vela-logo.png" width="500" height="500" alt="Vela Laboratories logo"></div>
-      <div class="eyebrow">ENGINEERING NOTE 001</div>
-      <h1>Vela: a deterministic spot exchange research system</h1>
-      <p class="dek">An engineering record of the Rust order book, its benchmark boundaries, and the systems needed to turn a testnet demo into a production exchange.</p>
-      <p class="status"><span class="status-dot"></span> Development concluded · Testnet research only · No real funds</p>
-    </header>
-
-    <nav class="toc" aria-label="Contents"><a href="#context">Context</a><a href="#benchmarks">Benchmarks</a><a href="#architecture">Architecture</a><a href="#faq">FAQ</a></nav>
-
-    <section id="context"><h2>Context</h2>
-      <p>Fast matching and trustworthy settlement are separate engineering problems. A central limit order book can execute deterministically in memory, while custody, accounting, data availability, and dispute enforcement require their own systems and evidence.</p>
-      <p>Vela explored that boundary with a Rust spot-exchange engine, wallet-signed orders, HTTP and WebSocket interfaces, a Sepolia contract demo, and research components for commitments and proving. The project is no longer under active development.</p>
-      <div class="callout"><strong>Current trust boundary</strong><p>Vela is not a production exchange. Demo credits are synthetic or unverified; there is no audited, reconciled production custody flow. The default proof path uses placeholders, public batch availability is not guaranteed, and no on-chain fraud-proof verifier or forced-inclusion mechanism is deployed. Do not use real funds.</p></div>
-      <p class="small">The architecture below describes implemented code and clearly labels prototype and design-stage parts. Source: Vela's exchange repository and trust-model documentation. The exchange repository is private.</p>
+      <p class="eyebrow">Engineering record / 2026</p>
+      <h1 id="page-title">Vela Exchange</h1>
+      <p class="hero-dek">A deterministic Rust spot-exchange research system. This record separates the matching engine, financial commit path, and proof research from the protections a production exchange would require.</p>
+      <div class="hero-meta" aria-label="Project status">
+        <span><strong>Status</strong> Development concluded</span>
+        <span><strong>Environment</strong> Testnet research</span>
+        <span><strong>Funds</strong> No real funds</span>
+      </div>
     </section>
 
-    <section id="benchmarks"><h2>Benchmarks</h2>
-      <p>These archived measurements were recorded May 20, 2026 on an Apple M3. They have not been reproduced on the current code and are not current exchange capacity. The <code>realistic_mm_workload</code> timing covers single-threaded <code>engine.process()</code> calls, excluding networking, signatures, database commits, and settlement.</p>
-      <div class="table-wrap"><table><caption>Historical Phase 3 measurements · Apple M3 · May 20, 2026</caption><thead><tr><th>Benchmark</th><th>Time (p50)</th><th>Throughput</th></tr></thead><tbody>
-        <tr><td><code>realistic_mm_workload</code></td><td>0.38 μs / request</td><td>2.5M ops/sec</td></tr>
-        <tr><td><code>post_order_gtc</code></td><td>9.13 μs</td><td>—</td></tr>
-        <tr><td><code>cancel_order</code></td><td>10.16 μs</td><td>—</td></tr>
-        <tr><td><code>fill_order</code></td><td>3.80 μs</td><td>—</td></tr>
-        <tr><td><code>fok_rollback</code></td><td>802 ns</td><td>—</td></tr>
-        <tr><td><code>hft_nonce_window</code> (20 orders)</td><td>27.98 μs</td><td>715k orders/sec</td></tr>
-        <tr><td><code>credit_auto_cancel</code></td><td>4.10 μs</td><td>—</td></tr>
-        <tr><td><code>fee_calculation_overhead/with_fees</code></td><td>3.81 μs</td><td>—</td></tr>
-        <tr><td><code>fee_calculation_overhead/zero_fees</code></td><td>3.43 μs</td><td>—</td></tr>
-        <tr><td><code>latency_percentiles/post_order_raw</code> (p50)</td><td>1.019 μs</td><td>—</td></tr>
-        <tr><td><code>component_breakdown/user_metadata_clone</code></td><td>58.2 ns</td><td>—</td></tr>
-        <tr><td><code>component_breakdown/nonce_window_accept</code></td><td>19.5 ns</td><td>—</td></tr>
-        <tr><td><code>component_breakdown/engine_process_post_order</code></td><td>1.95 μs</td><td>—</td></tr>
-      </tbody></table></div>
-      <h3>Old Pulse comparison</h3>
-      <p>The archived comparison used different hardware and did not establish equivalent workloads or request-outcome validation. These values are shown for the historical record, not as a defensible speedup claim.</p>
-      <div class="table-wrap"><table><caption>Historical comparison · different hardware and unvalidated workload equivalence</caption><thead><tr><th>Metric</th><th>Vela Phase 3 (M3)</th><th>Pulse (M2 Pro)</th></tr></thead><tbody>
-        <tr><td>Full loop latency (p50)</td><td>0.38 μs</td><td>7.92 μs</td></tr>
-        <tr><td>Throughput</td><td>2.5M ops/sec</td><td>125k ops/sec</td></tr>
-      </tbody></table></div>
-      <p><a class="plain-link" href="https://aryasomu.com/papers/dippi-technical-report.pdf">Read the technical report and methodology ↗</a></p>
+    <section class="chapter" id="overview" aria-labelledby="overview-title">
+      <div class="chapter-head"><span class="chapter-number">01 / Overview</span><h2 id="overview-title">What Vela explored</h2></div>
+      <div class="intro-grid">
+        <div>
+          <p class="lead">Fast matching and trustworthy settlement are separate engineering problems.</p>
+          <p>Vela combined a price-time priority order book, wallet-signed requests, HTTP and WebSocket interfaces, a Sepolia contract demo, and research paths for commitments and proving. The project is no longer under active development.</p>
+        </div>
+        <aside class="note" aria-label="Current trust boundary">
+          <strong>Current trust boundary</strong>
+          <p>Vela is a testnet research demo, not a production exchange. Demo credits are synthetic or unverified. There is no audited, reconciled production custody flow. Do not use real funds.</p>
+        </aside>
+      </div>
+      <div class="scope-grid" aria-label="Implementation scope">
+        <div><span class="scope-label">Implemented in code</span><p>Deterministic matching, signed API requests, market data feeds, local state roots and batch records.</p></div>
+        <div><span class="scope-label">Conditional path</span><p>A configured PostgreSQL ledger can commit matched financial effects before customer acknowledgement.</p></div>
+        <div><span class="scope-label">Research only</span><p>External proving, public data availability, on-chain dispute enforcement and forced inclusion.</p></div>
+      </div>
     </section>
 
-    <section id="architecture"><h2>Architecture</h2>
-      <p>Vela's core is a Rust workspace. The API authenticates and routes requests; the matching engine processes an ordered stream; state and committer components produce local commitments and batch records. A separately configured PostgreSQL ledger path can make a matched financial effect durable before acknowledgement. That path is implemented in code, but it has not established a production custody service.</p>
-      <div class="diagram" role="img" aria-label="Wallet-signed requests flow through API authentication, matching engine, optional ledger commit, then HTTP and WebSocket responses. A separate local batch and proof research path follows the engine."><span>Wallet-signed request</span><b>↓</b><span>API / authentication</span><b>↓</b><span>Rust matching engine</span><b>↓</b><span>Optional ledger commit boundary</span><b>↓</b><span>HTTP + WebSocket response</span><em>Side path: local state roots → batches / DA → experimental prover</em></div>
-      <p class="small">The order of these steps matters: in ledger-backed mode, successful customer-facing financial responses wait for the database commit. In testnet-demo mode without a ledger, balances are non-authoritative demo state.</p>
+    <section class="chapter" id="benchmarks" aria-labelledby="benchmarks-title">
+      <div class="chapter-head"><span class="chapter-number">02 / Measurements</span><h2 id="benchmarks-title">Historical engine benchmarks</h2></div>
+      <div class="benchmark-intro">
+        <p>Recorded May 20, 2026 on an Apple M3. These isolated results have not been reproduced on the current code and do not represent exchange capacity.</p>
+        <p><code>realistic_mm_workload</code> times single-threaded <code>engine.process()</code> calls. It excludes networking, signatures, database commits, custody, and settlement.</p>
+      </div>
+      <div class="measure-summary" aria-label="Historical workload summary">
+        <div><small>Realistic MM workload, p50</small><strong>0.38 μs</strong><span>per in-process request</span></div>
+        <div><small>Historical engine rate</small><strong>2.5M/s</strong><span>isolated operations, not trades</span></div>
+      </div>
+      <div class="table-group">
+        <h3>Order-path operations</h3>
+        <div class="table-wrap"><table>
+          <caption>Historical Phase 3 measurements / Apple M3</caption>
+          <thead><tr><th scope="col">Benchmark</th><th scope="col">Time (p50)</th><th scope="col">Throughput</th></tr></thead>
+          <tbody>
+            <tr><td><code>realistic_mm_workload</code></td><td>0.38 μs / request</td><td>2.5M ops/sec</td></tr>
+            <tr><td><code>post_order_gtc</code></td><td>9.13 μs</td><td>—</td></tr>
+            <tr><td><code>cancel_order</code></td><td>10.16 μs</td><td>—</td></tr>
+            <tr><td><code>fill_order</code></td><td>3.80 μs</td><td>—</td></tr>
+            <tr><td><code>fok_rollback</code></td><td>802 ns</td><td>—</td></tr>
+            <tr><td><code>hft_nonce_window</code> (20 orders)</td><td>27.98 μs</td><td>715k orders/sec</td></tr>
+            <tr><td><code>credit_auto_cancel</code></td><td>4.10 μs</td><td>—</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="table-group">
+        <h3>Overhead and components</h3>
+        <div class="table-wrap"><table>
+          <caption>Historical isolated measurements / Apple M3</caption>
+          <thead><tr><th scope="col">Benchmark</th><th scope="col">Time (p50)</th></tr></thead>
+          <tbody>
+            <tr><td><code>fee_calculation_overhead/with_fees</code></td><td>3.81 μs</td></tr>
+            <tr><td><code>fee_calculation_overhead/zero_fees</code></td><td>3.43 μs</td></tr>
+            <tr><td><code>latency_percentiles/post_order_raw</code> (p50)</td><td>1.019 μs</td></tr>
+            <tr><td><code>component_breakdown/user_metadata_clone</code></td><td>58.2 ns</td></tr>
+            <tr><td><code>component_breakdown/nonce_window_accept</code></td><td>19.5 ns</td></tr>
+            <tr><td><code>component_breakdown/engine_process_post_order</code></td><td>1.95 μs</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <details class="comparison">
+        <summary>Archived Pulse comparison <span>different hardware and unvalidated workload equivalence</span></summary>
+        <p>The old comparison used an Apple M3 for Vela and an M2 Pro for Pulse. It did not establish equivalent workloads or request-outcome validation, so the ratio is not a defensible speedup claim.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th scope="col">Metric</th><th scope="col">Vela Phase 3 (M3)</th><th scope="col">Pulse (M2 Pro)</th></tr></thead>
+          <tbody>
+            <tr><td>Full loop latency (p50)</td><td>0.38 μs</td><td>7.92 μs</td></tr>
+            <tr><td>Throughput</td><td>2.5M ops/sec</td><td>125k ops/sec</td></tr>
+          </tbody>
+        </table></div>
+      </details>
     </section>
 
-    <section id="state"><h3>State</h3>
-      <p>Order books and hot account state are held in memory. The state crate maintains typed keys, a cache, batch sequence, and deterministic roots for research inspection. Snapshots and local write-ahead records support recovery in the demo. These roots are local commitments; they are not evidence that public data availability or on-chain settlement is deployed.</p>
-      <p>When PostgreSQL is configured, customer available and locked balances are read from the ledger projection. Startup replay checks journal legs against the balance projection and replaces financial values recovered from local snapshots. This narrows the trust boundary for that configuration but does not complete deposit indexing, withdrawals, reconciliation, or disaster recovery.</p>
+    <section class="chapter" id="architecture" aria-labelledby="architecture-title">
+      <div class="chapter-head"><span class="chapter-number">03 / System design</span><h2 id="architecture-title">From signed request to response</h2></div>
+      <p class="section-intro">The core is a Rust workspace. In ledger-backed mode, a successful financial response waits for the database commit. In demo mode without a ledger, balances are non-authoritative.</p>
+      <ol class="flow" aria-label="Request path">
+        <li><span>01</span><strong>Authenticate</strong><small>Wallet-signed order intent enters the Axum API.</small></li>
+        <li><span>02</span><strong>Match</strong><small>The ordered stream runs through the Rust limit order book.</small></li>
+        <li><span>03</span><strong>Commit if configured</strong><small>Balanced ledger effects and an outbox event become durable.</small></li>
+        <li><span>04</span><strong>Respond</strong><small>HTTP and WebSocket clients receive the resulting events.</small></li>
+      </ol>
+      <p class="side-path">Research side path: local state roots → batch records and local data availability → experimental prover.</p>
+      <div class="component-grid">
+        <article id="matching">
+          <span class="component-kind">Core</span><h3>Matching engine</h3>
+          <p>Price-time priority books hold FIFO resting orders within ordered price levels. GTC, post-only, IOC and FOK use fixed-point arithmetic, nonce checks, reservations, fees and discardable delta buffers.</p>
+        </article>
+        <article id="api">
+          <span class="component-kind">Interface</span><h3>API and feeds</h3>
+          <p>Axum handles signed orders and cancellations, market data, account views and WebSocket topics. Short-lived account-bound sessions protect private reads; feed sequences support gap detection.</p>
+        </article>
+        <article id="state">
+          <span class="component-kind">Local state</span><h3>State and recovery</h3>
+          <p>Hot books and account state live in memory. Local roots, snapshots and write-ahead records support research inspection and demo recovery. Configured ledger balances replace recovered snapshot financial values.</p>
+        </article>
+        <article id="ledger">
+          <span class="component-kind">Conditional</span><h3>Ledger commit</h3>
+          <p>When configured, balanced idempotent effects and an outbox event post in one serializable PostgreSQL transaction. The API publishes proposed financial state only after that commit.</p>
+        </article>
+        <article id="committer">
+          <span class="component-kind">Local research path</span><h3>Committer</h3>
+          <p>Ordered requests and fills become hashed batch records. The current data-availability adapter writes locally; a hash alone cannot ensure public access to batch data.</p>
+        </article>
+        <article id="zkvm">
+          <span class="component-kind">Experimental</span><h3>zkVM adapter</h3>
+          <p>Deterministic replay and an SP1-compatible adapter sit behind configuration. The default provider is <code>PlaceholderProver</code>; no on-chain verifier is deployed.</p>
+        </article>
+      </div>
     </section>
 
-    <section id="matching"><h3>Matching Engine</h3>
-      <p>Each market is a price-time priority central limit order book. Price levels use ordered maps and resting orders retain FIFO order within a level. The engine handles GTC, post-only, IOC, and FOK requests with fixed-point arithmetic, nonce checks, balance reservations, fees, and deterministic response events.</p>
-      <p>Delta buffers let a rejected or unfillable operation discard its proposed changes. The sharded dispatcher batches independent market work; shared financial state requires careful merge rules. An October 2026 regression exposed a cross-market balance overwrite in an older measured source snapshot. The named reproduction passes after the fix, but that is a regression result, not a financial audit.</p>
+    <section class="chapter" id="details" aria-labelledby="details-title">
+      <div class="chapter-head"><span class="chapter-number">04 / Engine details</span><h2 id="details-title">What made the engine distinct</h2></div>
+      <div class="detail-list">
+        <div><h3>Market-maker limits</h3><p>Aggregate quoting limits can evict older resting orders across markets. A rolling 20-entry nonce window accepts overlapping signed requests without accepting a duplicate nonce. This is engine behavior, not a production credit facility.</p></div>
+        <div><h3>Deterministic updates</h3><p>Fixed-point values, ordered price levels and copy-on-write deltas keep order handling reproducible. Batch dispatch groups independent market work; shared financial state still needs careful merge rules.</p></div>
+        <div><h3>Market data</h3><p>WebSocket topics carry book, trade, market and authenticated account events. Reference charts can use external spot prices while testnet orders execute against Vela's separate synthetic book.</p></div>
+        <div><h3>Exploratory extensions</h3><p>The repository also contains feature-gated or incomplete work on committees, TEE attestation, perpetual margin math, FIX sessions and agent interfaces.</p></div>
+      </div>
     </section>
 
-    <section id="api"><h3>API Handler</h3>
-      <p>The Axum API exposes signed order and cancellation endpoints, market data, account views, and WebSocket feeds. Wallet signatures authenticate order intent. A short-lived, account-bound HTTP session protects private account reads. The public market data path and authenticated account path serve different information.</p>
-      <p>In testnet-demo mode, some routes intentionally operate without an authoritative ledger. Ledger-backed mode disables legacy balance-mutating routes until each effect has a balanced, idempotent journal transaction. These are runtime boundaries in the code, not a claim that a hosted production exchange exists.</p>
+    <section class="chapter" id="limits" aria-labelledby="limits-title">
+      <div class="chapter-head"><span class="chapter-number">05 / Boundaries</span><h2 id="limits-title">What the system did not establish</h2></div>
+      <div class="limits-grid">
+        <div><h3>Custody and operations</h3><p>No audited production custody, complete deposit and withdrawal flow, reconciliation or disaster recovery. Demo credits remain synthetic or unverified.</p></div>
+        <div><h3>Proof and availability</h3><p>The default proof path uses placeholders. Public batch availability, an on-chain fraud-proof verifier, penalties and forced inclusion are not deployed protections.</p></div>
+        <div><h3>Financial correctness</h3><p>A targeted cross-market balance overwrite regression passes after a fix to an older source snapshot. That result does not constitute a financial audit.</p></div>
+      </div>
+      <p class="closing">Vela should be read as a concluded testnet research system. It should not be described as a live, trustless or proof-secured exchange, and it must not be used with real funds.</p>
+      <div class="resources">
+        <span>Further reading</span>
+        <a href="https://aryasomu.com/papers/dippi-technical-report.pdf">Original technical report ↗</a>
+        <a href="https://github.com/Vela-Laboratories/website">Website source ↗</a>
+      </div>
     </section>
 
-    <section id="committer"><h3>Committer</h3>
-      <p>The committer packages ordered requests and fills into batch records and calculates content hashes. The current data-availability adapter writes batch files locally. A hash can reveal changes to data that is available, but it cannot ensure that the operator publishes or retains that data for independent users.</p>
-      <p>A separate matcher-to-ledger path posts balanced financial effects and an outbox event in one serializable PostgreSQL transaction when configured. The API publishes the proposed engine state only after that commit. This protects the specified commit boundary; custody, withdrawal completion, and public batch availability remain separate launch blockers.</p>
-    </section>
-
-    <section id="zkvm"><h3>zkVM</h3>
-      <p>The zkVM crate includes deterministic replay and an SP1-compatible prover adapter behind configuration. The default provider is <code>PlaceholderProver</code>. Production configuration fails closed without the required external prover infrastructure, and the current demo has no deployed on-chain verifier or penalty mechanism.</p>
-      <p>Consequently, Vela must not be described as trustless, proof-secured, or censorship resistant today. Proof-based verification and forced inclusion were research directions, not shipped customer protections.</p>
-    </section>
-
-    <section id="features"><h2>Interesting Features</h2>
-      <h3>Market-Maker Credit System</h3><p>The engine models aggregate quoting limits across markets and can evict older resting orders when limits are breached. A rolling 20-entry nonce window supports overlapping signed requests without accepting a duplicate nonce. Both are engine behavior; neither creates a production credit facility.</p>
-      <h3>Market Data Feeds</h3><p>WebSocket topics carry order-book, trade, market, and authenticated account events. Sequence numbers support gap detection and reconnection. Reference charts may use external spot prices, while testnet orders execute only against Vela's separate synthetic book.</p>
-    </section>
-
-    <section id="optimizations"><h2>Optimizations</h2>
-      <p>The engine uses fixed-point values, ordered price levels, a compact nonce ring, copy-on-write deltas, and batch dispatch to reduce work on the order path. The archived benchmarks measure isolated engine operations, not the incremental contribution of every optimization in production.</p>
-      <div class="callout"><strong>Measurement rule</strong><p>The May engine timings do not establish network, database, custody, or settlement throughput. They should not be described as a live exchange rate.</p></div>
-    </section>
-
-    <section id="extensions"><h2>Extensions</h2>
-      <p>The repository also contains experimental work on a committee, TEE attestation, perpetual margin math, FIX sessions, and agent interfaces. Several paths are feature-gated, use placeholders, or lack full UI and settlement integration. They are prototype surfaces and research scaffolding.</p>
-    </section>
-
-    <section id="faq"><h2>FAQ</h2>
-      <details><summary>Is Vela a live exchange?</summary><p>No. The project is a concluded testnet research demo. It must not be used with real funds.</p></details>
-      <details><summary>Does the 2.5M ops/sec figure describe trades or end-to-end throughput?</summary><p>No. It is a historical single-threaded in-process engine result from May 2026, not reproduced on the current code. HTTP, signatures, database commits, chain settlement, and custody are outside that measurement.</p></details>
-      <details><summary>Are the state roots and zkVM proofs production guarantees?</summary><p>No. Roots and replay code support research inspection. Public data availability, real proofs by default, on-chain enforcement, and forced inclusion are not deployed guarantees.</p></details>
-      <details><summary>Where can I read the evidence?</summary><p>The <a href="https://aryasomu.com/papers/dippi-technical-report.pdf">technical report</a> states the benchmark hardware, source archive hashes, methods, failures, and limits. The exchange code and full evidence archives are held in the Vela Laboratories repository.</p></details>
-    </section>
-    <footer><span>© 2026 Vela Laboratories</span><a href="#top">Back to top ↑</a><a href="https://github.com/Vela-Laboratories/website">Website source ↗</a></footer>
+    <footer><span>© 2026 Vela Laboratories</span><a href="#top">Back to top ↑</a></footer>
   </main>
 </body>
 </html>
