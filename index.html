@@ -16,7 +16,7 @@
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
-  <div class="topbar"><a href="#top" aria-label="Vela Laboratories home">Vela Laboratories</a><span>Research archive · October 2026</span></div>
+  <div class="topbar"><a href="#top" aria-label="Vela Laboratories home">Vela Laboratories</a><span>Research archive</span></div>
   <main id="main">
     <header id="top" class="hero">
       <div class="mark"><img src="/vela-logo.png" width="500" height="500" alt="Vela Laboratories logo"></div>
@@ -36,19 +36,28 @@
     </section>
 
     <section id="benchmarks"><h2>Benchmarks</h2>
-      <p>The most recent recorded CPU campaign was run on an AMD EPYC 9754 host with 16 available vCPUs in October 2026. It used synthetic accounts, loopback HTTP, and no hosted PostgreSQL or chain settlement. The figures below describe different boundaries and must not be combined into a single “TPS” claim.</p>
-      <div class="statgrid">
-        <div><span>IN-PROCESS ENGINE</span><strong>1.185M/s</strong><small>Median across three validated engine repetitions. Excludes HTTP, signatures, database, and custody.</small></div>
-        <div><span>HTTP, SINGLE CLIENT</span><strong>27.6 ms</strong><small>Median repeat p50 complete-body latency; 11,060 successes, zero failures across three repeats.</small></div>
-        <div><span>5-MINUTE SUSTAINED</span><strong>151/s</strong><small>Median successful response-header rate; 10,412 failed attempts in 148,986 total attempts.</small></div>
-      </div>
-      <div class="table-wrap"><table><caption>Follow-up CPU campaign · October 8–9, 2026</caption><thead><tr><th>Measurement</th><th>Result</th><th>Boundary</th></tr></thead><tbody>
-        <tr><td>Validated engine request stream</td><td>1,185,063 ops/s median</td><td>In-process <code>engine.process()</code> work only</td></tr>
-        <tr><td>Single-client HTTP</td><td>27.6 ms p50 / 65.3 ms p99</td><td>Successful complete-body loopback responses</td></tr>
-        <tr><td>32-client HTTP</td><td>35.7 ms p50 / 115.8 ms p99</td><td>Successful complete-body loopback responses</td></tr>
-        <tr><td>Five-minute sustained</td><td>145–166 successful ops/s</td><td>Three repetitions; response-header timing; failures included in denominator</td></tr>
+      <p>These archived measurements were recorded May 20, 2026 on an Apple M3. They have not been reproduced on the current code and are not current exchange capacity. The <code>realistic_mm_workload</code> timing covers single-threaded <code>engine.process()</code> calls, excluding networking, signatures, database commits, and settlement.</p>
+      <div class="table-wrap"><table><caption>Historical Phase 3 measurements · Apple M3 · May 20, 2026</caption><thead><tr><th>Benchmark</th><th>Time (p50)</th><th>Throughput</th></tr></thead><tbody>
+        <tr><td><code>realistic_mm_workload</code></td><td>0.38 μs / request</td><td>2.5M ops/sec</td></tr>
+        <tr><td><code>post_order_gtc</code></td><td>9.13 μs</td><td>—</td></tr>
+        <tr><td><code>cancel_order</code></td><td>10.16 μs</td><td>—</td></tr>
+        <tr><td><code>fill_order</code></td><td>3.80 μs</td><td>—</td></tr>
+        <tr><td><code>fok_rollback</code></td><td>802 ns</td><td>—</td></tr>
+        <tr><td><code>hft_nonce_window</code> (20 orders)</td><td>27.98 μs</td><td>715k orders/sec</td></tr>
+        <tr><td><code>credit_auto_cancel</code></td><td>4.10 μs</td><td>—</td></tr>
+        <tr><td><code>fee_calculation_overhead/with_fees</code></td><td>3.81 μs</td><td>—</td></tr>
+        <tr><td><code>fee_calculation_overhead/zero_fees</code></td><td>3.43 μs</td><td>—</td></tr>
+        <tr><td><code>latency_percentiles/post_order_raw</code> (p50)</td><td>1.019 μs</td><td>—</td></tr>
+        <tr><td><code>component_breakdown/user_metadata_clone</code></td><td>58.2 ns</td><td>—</td></tr>
+        <tr><td><code>component_breakdown/nonce_window_accept</code></td><td>19.5 ns</td><td>—</td></tr>
+        <tr><td><code>component_breakdown/engine_process_post_order</code></td><td>1.95 μs</td><td>—</td></tr>
       </tbody></table></div>
-      <p class="small">The older 2.5M ops/s Apple M3 figure is a historical isolated result with a corrected workload and should not be used as current capacity. The follow-up sustained harness did not retain failure status codes or bodies, so the failure causes remain unclassified. The recorded engine result is not a financial commit rate.</p>
+      <h3>Old Pulse comparison</h3>
+      <p>The archived comparison used different hardware and did not establish equivalent workloads or request-outcome validation. These values are shown for the historical record, not as a defensible speedup claim.</p>
+      <div class="table-wrap"><table><caption>Historical comparison · different hardware and unvalidated workload equivalence</caption><thead><tr><th>Metric</th><th>Vela Phase 3 (M3)</th><th>Pulse (M2 Pro)</th></tr></thead><tbody>
+        <tr><td>Full loop latency (p50)</td><td>0.38 μs</td><td>7.92 μs</td></tr>
+        <tr><td>Throughput</td><td>2.5M ops/sec</td><td>125k ops/sec</td></tr>
+      </tbody></table></div>
       <p><a class="plain-link" href="https://aryasomu.com/papers/dippi-technical-report.pdf">Read the technical report and methodology ↗</a></p>
     </section>
 
@@ -89,8 +98,8 @@
     </section>
 
     <section id="optimizations"><h2>Optimizations</h2>
-      <p>The engine uses fixed-point values, ordered price levels, a compact nonce ring, copy-on-write deltas, and batch dispatch to reduce work on the order path. The benchmark campaign measures their combined synthetic workload, not the incremental contribution of every optimization in production.</p>
-      <div class="callout"><strong>Measurement rule</strong><p>Do not compare the in-process operation rate with HTTP latency or claim a network, database, or settlement rate from it. The October campaign records attempts and failures separately; successful latency percentiles omit failed requests.</p></div>
+      <p>The engine uses fixed-point values, ordered price levels, a compact nonce ring, copy-on-write deltas, and batch dispatch to reduce work on the order path. The archived benchmarks measure isolated engine operations, not the incremental contribution of every optimization in production.</p>
+      <div class="callout"><strong>Measurement rule</strong><p>The May engine timings do not establish network, database, custody, or settlement throughput. They should not be described as a live exchange rate.</p></div>
     </section>
 
     <section id="extensions"><h2>Extensions</h2>
@@ -99,7 +108,7 @@
 
     <section id="faq"><h2>FAQ</h2>
       <details><summary>Is Vela a live exchange?</summary><p>No. The project is a concluded testnet research demo. It must not be used with real funds.</p></details>
-      <details><summary>Does the 1.185M/s figure describe trades or end-to-end throughput?</summary><p>No. It is a median in-process engine operation rate for a validated synthetic request stream. HTTP, signatures, database commits, chain settlement, and custody are outside that measurement.</p></details>
+      <details><summary>Does the 2.5M ops/sec figure describe trades or end-to-end throughput?</summary><p>No. It is a historical single-threaded in-process engine result from May 2026, not reproduced on the current code. HTTP, signatures, database commits, chain settlement, and custody are outside that measurement.</p></details>
       <details><summary>Are the state roots and zkVM proofs production guarantees?</summary><p>No. Roots and replay code support research inspection. Public data availability, real proofs by default, on-chain enforcement, and forced inclusion are not deployed guarantees.</p></details>
       <details><summary>Where can I read the evidence?</summary><p>The <a href="https://aryasomu.com/papers/dippi-technical-report.pdf">technical report</a> states the benchmark hardware, source archive hashes, methods, failures, and limits. The exchange code and full evidence archives are held in the Vela Laboratories repository.</p></details>
     </section>

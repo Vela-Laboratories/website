@@ -4,6 +4,6 @@ Static technical site for velalaboratories.com. The page is intentionally buildl
 
 ## Content provenance
 
-Architecture and trust-boundary copy was checked against the Vela exchange repository, especially `docs/security/trust-model.mdx`, `docs/architecture/matcher-ledger-commit.md`, the engine, API, committer, and zkVM crates. The benchmark values come from `paper/rebenchmark-summary.json` and `paper/README.md` in the exchange repository. The public report is linked on the page.
+Architecture and trust-boundary copy was checked against the Vela exchange repository, especially `docs/security/trust-model.mdx`, `docs/architecture/matcher-ledger-commit.md`, the engine, API, committer, and zkVM crates. The historical May 2026 table and Pulse comparison come from `BENCHMARKS.md` in the exchange repository. The public report is linked on the page.
 
-The older 2.5M ops/s Apple M3 result is explicitly labeled historical. The October 2026 in-process, HTTP, and sustained figures retain their separate timing boundaries and failure counts. This is a concluded testnet research project, not a production exchange.
+The 2.5M ops/s Apple M3 result is explicitly labeled historical and scoped to isolated in-process engine work. The later October 2026 CPU campaign is excluded from the website at the user's request. This is a concluded testnet research project, not a production exchange.
