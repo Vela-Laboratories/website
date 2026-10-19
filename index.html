@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f3ed">
+  <meta name="theme-color" content="#fffbED">
   <meta name="description" content="Vela Laboratories: an engineering record of a deterministic Rust spot-exchange research system, its measured performance, architecture, and limits.">
   <link rel="canonical" href="https://velalaboratories.com/">
   <meta property="og:url" content="https://velalaboratories.com/">
@@ -16,18 +16,17 @@
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
-  <div class="topbar"><a href="#top" aria-label="Vela Laboratories home"><span class="brand-glyph" aria-hidden="true">V</span> Vela Laboratories</a><span>Field notes <b> / </b> 001 <b> · </b> October 2026</span></div>
-  <aside class="rail" aria-label="On this page"><span>ON THIS PAGE</span><a href="#context">Context</a><a href="#benchmarks">Benchmarks</a><a href="#architecture">Architecture</a><a href="#state">State</a><a href="#matching">Matching engine</a><a href="#api">API handler</a><a href="#committer">Committer</a><a href="#zkvm">zkVM</a><a href="#features">Features</a><a href="#optimizations">Optimizations</a><a href="#extensions">Extensions</a><a href="#faq">FAQ</a></aside>
+  <div class="topbar"><a href="#top" aria-label="Vela Laboratories home">Vela Laboratories</a><span>Research archive · October 2026</span></div>
   <main id="main">
     <header id="top" class="hero">
-      <div class="mark" aria-hidden="true"><svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 11L30 60H42L65 11" stroke="currentColor" stroke-width="5" stroke-linecap="square"/><path d="M23 11L36 39L49 11" stroke="currentColor" stroke-width="5" stroke-linecap="square"/></svg></div>
-      <div class="eyebrow">RESEARCH ARCHIVE <span> / </span> ENGINEERING NOTE 001</div>
+      <div class="mark"><img src="/vela-logo.png" width="500" height="500" alt="Vela Laboratories logo"></div>
+      <div class="eyebrow">ENGINEERING NOTE 001</div>
       <h1>Vela: a deterministic spot exchange research system</h1>
       <p class="dek">An engineering record of the Rust order book, its benchmark boundaries, and the systems needed to turn a testnet demo into a production exchange.</p>
       <p class="status"><span class="status-dot"></span> Development concluded · Testnet research only · No real funds</p>
     </header>
 
-    <nav class="toc" aria-label="Contents"><a href="#context">Context</a><a href="#benchmarks">Benchmarks</a><a href="#architecture">Architecture</a><a href="#state">State</a><a href="#matching">Matching Engine</a><a href="#api">API Handler</a><a href="#committer">Committer</a><a href="#zkvm">zkVM</a><a href="#features">Interesting Features</a><a href="#optimizations">Optimizations</a><a href="#extensions">Extensions</a><a href="#faq">FAQ</a></nav>
+    <nav class="toc" aria-label="Contents"><a href="#context">Context</a><a href="#benchmarks">Benchmarks</a><a href="#architecture">Architecture</a><a href="#faq">FAQ</a></nav>
 
     <section id="context"><h2>Context</h2>
       <p>Fast matching and trustworthy settlement are separate engineering problems. A central limit order book can execute deterministically in memory, while custody, accounting, data availability, and dispute enforcement require their own systems and evidence.</p>
