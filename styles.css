@@ -14,8 +14,10 @@ a:hover { text-decoration-color: currentColor; }
 a:focus-visible, summary:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
 .skip { position: absolute; top: -60px; left: 20px; z-index: 10; padding: 7px 10px; background: #20201e; color: #fffbED; }
 .skip:focus { top: 10px; }
-.site-header { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; padding: 23px clamp(22px, 4vw, 54px); border-bottom: 1px solid #bcb9ae; font-size: .79rem; }
-.site-name { font-family: Georgia, 'Times New Roman', serif; font-size: 1.13rem; font-weight: 700; letter-spacing: -.035em; text-decoration: none; white-space: nowrap; }
+.site-header { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 23px clamp(22px, 4vw, 54px); border-bottom: 1px solid #bcb9ae; font-size: .79rem; }
+.site-name { display: inline-flex; align-items: center; gap: 11px; font-family: Georgia, 'Times New Roman', serif; font-size: 1.13rem; font-weight: 700; letter-spacing: -.035em; text-decoration: none; white-space: nowrap; }
+.site-name img { display: block; width: 43px; height: auto; }
+.site-name span { padding-left: 11px; border-left: 1px solid #9d9a8f; }
 .site-header nav { display: flex; flex-wrap: wrap; gap: 10px 26px; }
 .site-header nav a { text-decoration: none; }
 .site-header nav a:hover { text-decoration: underline; }
